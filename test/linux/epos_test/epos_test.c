@@ -19,7 +19,7 @@
 #include "servo_def.h"
 
 #define EC_TIMEOUTMON 500
-#define NUMOFEPOS4_DRIVE	2
+#define NUMOFEPOS4_DRIVE	1
 
 EPOS4_Drive_pt	epos4_drive_pt[NUMOFEPOS4_DRIVE];
 int started[NUMOFEPOS4_DRIVE]={0}, ServoState=0;
@@ -77,7 +77,7 @@ int ServoOn_GetCtrlWrd(uint16_t StatusWord, uint16_t *ControlWord)
 
 void simpletest(char *ifname)
 {
-    int i, k, oloop, iloop, chk, wkc_count, p1, p2;
+    int i, k, oloop, iloop, chk, wkc_count, p1;
     needlf = FALSE;
     inOP = FALSE;
 
@@ -257,16 +257,16 @@ void simpletest(char *ifname)
            wkc = ec_receive_processdata(EC_TIMEOUTRET);
 		   //sleep(1);
 		   printf("Status word 0 = 0x%X\n", epos4_drive_pt[0].ptInParam->StatusWord);
-		   printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
+//		   printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
 		   p1 = epos4_drive_pt[0].ptInParam->PositionActualValue;
-		   p2 = epos4_drive_pt[1].ptInParam->PositionActualValue;
+//		   p2 = epos4_drive_pt[1].ptInParam->PositionActualValue;
 		   printf("Present Position 0 = %i\n", p1);
-		   printf("Present Position 1 = %i\n", p2);
+//		   printf("Present Position 1 = %i\n", p2);
 		   printf("Switch on EPOS4 \n");
 			osal_usleep(800);
 
 		   epos4_drive_pt[0].ptOutParam->TargetPosition = p1;
-		   epos4_drive_pt[1].ptOutParam->TargetPosition = p2;
+//		   epos4_drive_pt[1].ptOutParam->TargetPosition = p2;
 		   ec_send_processdata();
            wkc = ec_receive_processdata(EC_TIMEOUTRET);
 		   osal_usleep(800);
@@ -288,49 +288,89 @@ void simpletest(char *ifname)
 				ec_send_processdata();
 			    wkc = ec_receive_processdata(EC_TIMEOUTRET);
 			    printf("Status word 0 = 0x%X\n", epos4_drive_pt[0].ptInParam->StatusWord);
-	  		    printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
+//	  		    printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
 				printf("Position 0 = %i / %i\n", epos4_drive_pt[0].ptInParam->PositionActualValue, epos4_drive_pt[0].ptOutParam->TargetPosition);				
-				printf("Position 1 = %i / %i\n", epos4_drive_pt[1].ptInParam->PositionActualValue, epos4_drive_pt[1].ptOutParam->TargetPosition);
+//				printf("Position 1 = %i / %i\n", epos4_drive_pt[1].ptInParam->PositionActualValue, epos4_drive_pt[1].ptOutParam->TargetPosition);
 				osal_usleep(800);
 		     }
-         	while (epos4_drive_pt[0].ptInParam->StatusWord != 0x1237 || epos4_drive_pt[1].ptInParam->StatusWord != 0x1237);
+//         	while (epos4_drive_pt[0].ptInParam->StatusWord != 0x1237 || epos4_drive_pt[1].ptInParam->StatusWord != 0x1237);
+             while (epos4_drive_pt[0].ptInParam->StatusWord != 0x1237);
 
 
                 /* cyclic loop */
-            for(i = 1; i <= 5000; i++)
-            {
-                /*ec_send_processdata();
-                wkc = ec_receive_processdata(EC_TIMEOUTRET);
+             while (epos4_drive_pt[0].ptInParam->StatusWord == 0x1237) {
+                 for (i = 1; i <= 5000; i++) {
+                     /*ec_send_processdata();
+                     wkc = ec_receive_processdata(EC_TIMEOUTRET);
 
-                if(wkc >= expectedWKC)
-                {
-                    printf("Processdata cycle %4d, WKC %d , O:", i, wkc);
+                     if(wkc >= expectedWKC)
+                     {
+                         printf("Processdata cycle %4d, WKC %d , O:", i, wkc);
 
-                    for(j = 0 ; j < oloop; j++)
-                    {
-                        printf(" %2.2x", *(ec_slave[0].outputs + j));
-                    }
+                         for(j = 0 ; j < oloop; j++)
+                         {
+                             printf(" %2.2x", *(ec_slave[0].outputs + j));
+                         }
 
-                    printf(" I:");
-                    for(j = 0 ; j < iloop; j++)
-                    {
-                        printf(" %2.2x", *(ec_slave[0].inputs + j));
-                    }
-                    printf(" T:%"PRId64"\r",ec_DCtime);
-                    needlf = TRUE;
-                }*/
-				//epos4_drive_pt[0].ptOutParam->ControlWord = 0x0F;
-				epos4_drive_pt[0].ptOutParam->TargetPosition = i*50+p1;
-				epos4_drive_pt[1].ptOutParam->TargetPosition = -i*50+p2;
-				ec_send_processdata();
-           		wkc = ec_receive_processdata(EC_TIMEOUTRET);
-				printf("Status word 0 = 0x%X\n", epos4_drive_pt[0].ptInParam->StatusWord);
-				printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
-				printf("Actual Position 0 = %i / %i\n", epos4_drive_pt[0].ptInParam->PositionActualValue-p1, epos4_drive_pt[0].ptOutParam->TargetPosition-p1);				
-				printf("Actual Position 1 = %i / %i\n", epos4_drive_pt[1].ptInParam->PositionActualValue-p2, epos4_drive_pt[1].ptOutParam->TargetPosition-p2);				
-                osal_usleep(800);
+                         printf(" I:");
+                         for(j = 0 ; j < iloop; j++)
+                         {
+                             printf(" %2.2x", *(ec_slave[0].inputs + j));
+                         }
+                         printf(" T:%"PRId64"\r",ec_DCtime);
+                         needlf = TRUE;
+                     }*/
+                     //epos4_drive_pt[0].ptOutParam->ControlWord = 0x0F;
+                     epos4_drive_pt[0].ptOutParam->TargetPosition = i * 50 + p1;
+//				epos4_drive_pt[1].ptOutParam->TargetPosition = -i*50+p2;
+                     ec_send_processdata();
+                     wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                     printf("Status word 0 = 0x%X\n", epos4_drive_pt[0].ptInParam->StatusWord);
+                     if(epos4_drive_pt[0].ptInParam->StatusWord != 0x1237)break;
+//				printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
+                     printf("Actual Position 0 = %i / %i\n", epos4_drive_pt[0].ptInParam->PositionActualValue - p1,
+                            epos4_drive_pt[0].ptOutParam->TargetPosition - p1);
+//				printf("Actual Position 1 = %i / %i\n", epos4_drive_pt[1].ptInParam->PositionActualValue-p2, epos4_drive_pt[1].ptOutParam->TargetPosition-p2);
+                     osal_usleep(750);
 
-            }
+                 }
+                 for (i = 1; i <= 5000; i++) {
+                     /*ec_send_processdata();
+                     wkc = ec_receive_processdata(EC_TIMEOUTRET);
+
+                     if(wkc >= expectedWKC)
+                     {
+                         printf("Processdata cycle %4d, WKC %d , O:", i, wkc);
+
+                         for(j = 0 ; j < oloop; j++)
+                         {
+                             printf(" %2.2x", *(ec_slave[0].outputs + j));
+                         }
+
+                         printf(" I:");
+                         for(j = 0 ; j < iloop; j++)
+                         {
+                             printf(" %2.2x", *(ec_slave[0].inputs + j));
+                         }
+                         printf(" T:%"PRId64"\r",ec_DCtime);
+                         needlf = TRUE;
+                     }*/
+                     //epos4_drive_pt[0].ptOutParam->ControlWord = 0x0F;
+                     epos4_drive_pt[0].ptOutParam->TargetPosition = 5000 * 50 - i * 50 + p1;
+//				epos4_drive_pt[1].ptOutParam->TargetPosition = -i*50+p2;
+                     ec_send_processdata();
+                     wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                     printf("Status word 0 = 0x%X\n", epos4_drive_pt[0].ptInParam->StatusWord);
+                     if(epos4_drive_pt[0].ptInParam->StatusWord != 0x1237)break;
+//				printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
+                     printf("Actual Position 0 = %i / %i\n", epos4_drive_pt[0].ptInParam->PositionActualValue - p1,
+                            epos4_drive_pt[0].ptOutParam->TargetPosition - p1);
+//				printf("Actual Position 1 = %i / %i\n", epos4_drive_pt[1].ptInParam->PositionActualValue-p2, epos4_drive_pt[1].ptOutParam->TargetPosition-p2);
+                     osal_usleep(750);
+
+                 }
+             }
+
 			for (i=0; i<NUMOFEPOS4_DRIVE; ++i)
 			   {
 				   epos4_drive_pt[i].ptOutParam->ControlWord = 0x00;
@@ -340,7 +380,7 @@ void simpletest(char *ifname)
 		       wkc = ec_receive_processdata(EC_TIMEOUTRET);
 			   //sleep(1);
 			   printf("Status word 0 = 0x%X\n", epos4_drive_pt[0].ptInParam->StatusWord);
-			   printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
+//			   printf("Status word 1 = 0x%X\n", epos4_drive_pt[1].ptInParam->StatusWord);
 			   osal_usleep(800);
 
                 inOP = FALSE;
